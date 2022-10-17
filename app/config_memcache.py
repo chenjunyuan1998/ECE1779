@@ -18,6 +18,7 @@ def set_configure():
     if capacity.isdigit():
         BackendApp.db.put_config(capacity,policy)
         memcache.refreshConfiguration()
+        memcache.clear()
 
         response = webapp.response_class(
         response=json.dumps("Success"),

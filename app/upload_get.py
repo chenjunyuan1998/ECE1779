@@ -28,6 +28,8 @@ def search():
 
 
 
+
+
     if result == -1:  # if can't get location from memcache, get location from DB
         DBresult = BackendApp.db.get_image_with_key(key) # method from db to get image location using specific key
         if DBresult is None:
@@ -38,11 +40,18 @@ def search():
             with open(fname, "rb") as image_file:
                 encoded_image = b64encode(image_file.read()).decode('utf-8')
 
-            memcache.put(key, encoded_image)  # add the key and file name to cache as well as database
-            print(memcache.getSpace())
-            #memcache.put(key,fname)#save current request to memcache
-            return render_template("display_image.html", result = fname[4:])#return image address
-
+            if memcache.put(key, encoded_image):
+                # add the key and file name to cache as well as database
+                print(memcache.getSpace())
+                #memcache.put(key,fname)#save current request to memcache
+                return render_template("display_image.html", result = fname[4:])#return image address
+            else:
+                response1 = webapp.response_class(
+                    response=json.dumps("We can't find the file from cache and we found it in database,the size of the restore image exceed the maximum capacity."),
+                    status=400,
+                    mimetype='application/json'
+                )
+                return response1
         return response
     else:
         #decode base64 string data
