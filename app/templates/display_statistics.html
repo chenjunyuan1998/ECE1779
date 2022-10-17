@@ -16,7 +16,7 @@
 <table class = "keytable">
 <thead>
            <th>Number of Items</th>
-           <th>Total size of items</th>
+           <th>Total size of items (MB)</th>
            <th>Number of Requests</th>
            <th>Hit </th>
            <th>Miss </th>
@@ -28,7 +28,7 @@
 
        <tr>
            <td>{{ result[0] }} </td>
-           <td>{{ result[1] }} </td>
+           <td>{{ "%.2f"|format(result[1]/1024/1024)}} </td>
            <td>{{ result[2] }} </td>
            <td>{{ result[3] }} </td>
            <td>{{ result[4] }} </td>

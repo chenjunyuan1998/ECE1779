@@ -1,8 +1,9 @@
+from base64 import b64encode
 from email.mime import multipart
 
 import requests
-from data.decorators import data
-from form import form
+#from data.decorators import data
+#from form import form
 
 from BackendApp import db
 import BackendApp
@@ -18,7 +19,7 @@ This file is for test only
 
 @webapp.route('/api/list_keys', methods=['GET', 'POST'])
 def test_display_key():
-    #test display key function
+    # test display key function
     keyList = BackendApp.db.get_key_list()
     display_list = []
     for key in keyList:
@@ -30,9 +31,9 @@ def test_display_key():
     }
 
 
-@webapp.route('/api/key/<key_value>', methods=['GET','POST'])
+@webapp.route('/api/key/<key_value>', methods=['GET', 'POST'])
 def test_search(key_value):
-    #test search function
+    # test search function
     key = key_value
     result = memcache.get(key)
 
@@ -47,17 +48,22 @@ def test_search(key_value):
                 }
             }
         else:
+
             fname = os.path.join('app/static/images', key)
-            memcache.put(key, fname)
+            with open(fname, "rb") as image_file:
+                encoded_image = b64encode(image_file.read()).decode('utf-8')
+
+            memcache.put(key, encoded_image)
+
             return {
                 "success": "true",
-                "content": fname
+                "content": encoded_image
             }
 
 
 @webapp.route('/api/upload', methods=['POST'])
 def test_upload():
-    #test upload function
+    # test upload function
     key = request.form.get("key")
 
     if key == '' or key is None:
@@ -78,14 +84,14 @@ def test_upload():
             }
         }
 
-
-
     new_image = request.files['file']
     fname = os.path.join('app/static/images', key)
     new_image.save(fname)
-    print(fname)
 
-    memcache.put(key, fname)
+    with open(fname, "rb") as image_file:
+        encoded_image = b64encode(image_file.read()).decode('utf-8')
+
+    memcache.put(key, encoded_image)
     BackendApp.db.put_image(key, fname, 'app/static/images')
 
     return {

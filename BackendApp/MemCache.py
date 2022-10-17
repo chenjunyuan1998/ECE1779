@@ -22,10 +22,10 @@ class MemCache:
     Space : memory usage
     """
 
-    def __init__(self, cap, policy):
+    def __init__(self, capi, policy):
         self.left = Node(0, 0)
         self.right = Node(0, 0)
-        self.cap = cap * 1024 * 1024
+        self.cap = capi * 1024 * 1024
         self.cache = {}
         self.right.prev = self.left
         self.left.next = self.right
@@ -103,13 +103,13 @@ class MemCache:
 
         if key in self.cache:
             self.remove(self.cache[key])
-            self.space -= sys.getsizeof(self.cache[key])
+            self.space -= sys.getsizeof(self.cache[key].value)
             self.size -= 1
 
         new_node = Node(key, val)
         self.cache[key] = new_node
         self.insert(self.cache[key])
-        self.space += sys.getsizeof(self.cache[key])
+        self.space += sys.getsizeof(val)
         self.size += 1
 
         while self.space > self.cap:
@@ -144,18 +144,28 @@ class MemCache:
     def invalidateKey(self, key):
         self.total += 1
         removed = self.cache[key]
-        self.space -= sys.getsizeof(removed)
+        self.space -= sys.getsizeof(removed.value)
         self.remove(removed)
         del self.cache[removed.key]
         self.size -= 1
         self.hit += 1
 
+    """
+    size : nums of items
+    space : allocated space in cache
+    total : total request
+    hit : hitting request
+    missed : missed request
+    """
     def updateStats(self):
        db.put_stats(self.size, self.space, self.total, self.hit, self.missed)
 
+    """
+    update new capacity and policy
+    """
     def refreshConfiguration(self):
         conf = db.get_config()
-        self.cap = conf[0]
+        self.cap = conf[0] * 1024 *1024
         self.policy = conf[1]
 
 
@@ -169,10 +179,10 @@ class MemCache:
         return self.size
 
     def getCapacityLeft(self):
-        return (self.cap - self.space) // (1024 ** 2)
+        return (self.cap - self.space) / (1024 ** 2)
 
     def getSpace(self):
-        return self.space
+        return self.space / (1024 ** 2)
 
     def getCap(self):
-        return self.cap
+        return self.cap / (1024 ** 2)
