@@ -2,8 +2,8 @@ from base64 import b64encode
 from email.mime import multipart
 
 import requests
-from data.decorators import data
-from form import form
+#from data.decorators import data
+#from form import form
 
 from BackendApp import db
 import BackendApp
@@ -54,6 +54,7 @@ def test_search(key_value):
                 encoded_image = b64encode(image_file.read()).decode('utf-8')
 
             memcache.put(key, encoded_image)
+
             return {
                 "success": "true",
                 "content": encoded_image

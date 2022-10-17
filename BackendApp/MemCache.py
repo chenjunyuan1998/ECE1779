@@ -22,10 +22,10 @@ class MemCache:
     Space : memory usage
     """
 
-    def __init__(self, cap, policy):
+    def __init__(self, capi, policy):
         self.left = Node(0, 0)
         self.right = Node(0, 0)
-        self.cap = cap * 1024 * 1024
+        self.cap = capi * 1024 * 1024
         self.cache = {}
         self.right.prev = self.left
         self.left.next = self.right
@@ -165,7 +165,7 @@ class MemCache:
     """
     def refreshConfiguration(self):
         conf = db.get_config()
-        self.cap = conf[0]
+        self.cap = conf[0] * 1024 *1024
         self.policy = conf[1]
 
 
@@ -185,4 +185,4 @@ class MemCache:
         return self.space / (1024 ** 2)
 
     def getCap(self):
-        return self.cap
+        return self.cap / (1024 ** 2)

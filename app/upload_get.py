@@ -1,4 +1,5 @@
 import base64
+import sys
 from base64 import b64encode
 
 from flask import render_template, url_for, request, flash, redirect
@@ -26,11 +27,13 @@ def search():
     )
 
 
+
     if result == -1:  # if can't get location from memcache, get location from DB
         DBresult = BackendApp.db.get_image_with_key(key) # method from db to get image location using specific key
         if DBresult is None:
             return response
         else:
+            #flash("We can't find the file from cache but we found it in database, and we restore it back to cache ")
             fname = os.path.join('app/static/images', key)
             with open(fname, "rb") as image_file:
                 encoded_image = b64encode(image_file.read()).decode('utf-8')
@@ -59,17 +62,31 @@ def upload():
 
     with open(fname, "rb") as image_file:
         encoded_image = b64encode(image_file.read()).decode('utf-8')
+    print('Image size: ', sys.getsizeof(encoded_image))
+    print('Cache Cap: ', memcache.getCap())
 
-    memcache.put(key, encoded_image)  # add the key and file name to cache as well as database
-    print(memcache.getSpace())
-    BackendApp.db.put_image(key,fname,'app/static/images') # method from db to put image
+    if memcache.put(key, encoded_image):
+        #print('Image size: ', sys.getsizeof(encoded_image))
+        #print('Cache Cap: ', memcache.getCap())
+    #memcache.put(key, encoded_image)  # add the key and file name to cache as well as database
+
+        BackendApp.db.put_image(key,fname,'app/static/images') # method from db to put image
 
 
-    response = webapp.response_class(
-        response=json.dumps("OK"),
-        status=200,
-        mimetype='application/json'
-    )
-    return response
+        response = webapp.response_class(
+            response=json.dumps("OK"),
+            status=200,
+            mimetype='application/json'
+        )
+        return response
+    else:
+        response1 = webapp.response_class(
+            response=json.dumps("The size of the image is larger than the capacity of the cache"),
+            status=400,
+            mimetype='application/json'
+        )
+        return response1
+
+
 
 
